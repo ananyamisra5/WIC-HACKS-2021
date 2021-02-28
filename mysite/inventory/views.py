@@ -1,6 +1,7 @@
 from django.shortcuts import render
+from django.template.loader import render_to_string
 from .forms import BarcodeForm
-from .models import Item
+from .models import Item, Finance
 from pyzbar import pyzbar
 from django.db.models import F
 from PIL import Image
@@ -18,16 +19,20 @@ def add_inventory_view(request):
             pyzbar_decoded = pyzbar.decode(Image.open(img_obj.image))
             barcode_decoded = pyzbar_decoded[0].data.decode()
             item = Item.objects.filter(barcode=barcode_decoded)
+            money = Finance.objects.all()[0].money
             if not item:
                 return render(request, 'inputbarcode.html', {'form': form,\
                  'barcode_decoded': barcode_decoded, 'itemno': "This Item doesnt' exist",\
-                     'item_type': "error"})
+                     'item_type': "error", "money": money})
             item.update(amount=F('amount')+1)
+            Finance.objects.all().update(money=F('money')-item[0].buying_price)
+            money = Finance.objects.all()[0].money
             item_no = Item.objects.get(barcode=barcode_decoded).amount
             item_type = Item.objects.get(barcode=barcode_decoded).Name
 
             return render(request, 'inputbarcode.html', {'form': form,\
-                 'barcode_decoded': barcode_decoded, 'itemno': item_no, 'item_type': item_type})
+                 'barcode_decoded': barcode_decoded, 'itemno': item_no, 'item_type': item_type,\
+                     "money": money})
     else:
         form = BarcodeForm()
     return render(request, 'inputbarcode.html', {'form': form})
@@ -44,18 +49,22 @@ def sell_inventory_view(request):
             pyzbar_decoded = pyzbar.decode(Image.open(img_obj.image))
             barcode_decoded = pyzbar_decoded[0].data.decode()
             item = Item.objects.filter(barcode=barcode_decoded)
+            money = Finance.objects.all()[0].money
             if not item:
                 return render(request, 'inputbarcode.html', {'form': form,\
                  'barcode_decoded': barcode_decoded, 'itemno': "This Item doesnt' exist",\
-                     'item_type': "error"})
+                     'item_type': "error", "money": money})
             if item[0].amount==0:
                 item = Item.objects.get(barcode=barcode_decoded)
                 item_type = item.Name
                 email = item.supplier_email
                 return render(request, 'inputbarcode.html', {'form': form,\
                  'barcode_decoded': barcode_decoded, 'itemno': 0,\
-                     'item_type': item_type, 'email': email})
+                     'item_type': item_type, 'email': email, "money": money})
             item.update(amount=F('amount')-1)
+            Finance.objects.all().update(money=F('money')-item[0].selling_price)
+            money = Finance.objects.all()[0].money
+            
             item_no = Item.objects.get(barcode=barcode_decoded).amount
             item_type = Item.objects.get(barcode=barcode_decoded).Name
 
@@ -65,9 +74,9 @@ def sell_inventory_view(request):
                 email = item.supplier_email
                 return render(request, 'inputbarcode.html', {'form': form,\
                  'barcode_decoded': barcode_decoded, 'itemno': "You don't have any more of this item",\
-                     'item_type': item_type, 'email': email})
+                     'item_type': item_type, 'email': email, "money": money})
             return render(request, 'inputbarcode.html', {'form': form,\
-                 'barcode_decoded': barcode_decoded, 'itemno': item_no, 'item_type': item_type})
+                 'barcode_decoded': barcode_decoded, 'itemno': item_no, 'item_type': item_type, "money": money})
     else:
         form = BarcodeForm()
     return render(request, 'inputbarcode.html', {'form': form})

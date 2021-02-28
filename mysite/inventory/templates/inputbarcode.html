@@ -5,5 +5,12 @@
   </form>
   
   {% if barcode_decoded %}
-    <h3>Succesfully uploaded</h3>
+    <h3>Item type: {{item_type}}</h3>
+    <h3>inventory: {{itemno}}</h3>
+    {% if itemno < 5 or itemno is "You don't have any more of this item" %}
+      <h3>ALERT: you have a low stock of this item</h3>
+      <h3><button type="sendemail">send an email to {{email}}</button></h3>
+    {% endif %}
+  {% else %}
+  <h3>Invalid Barcode</h3>
   {% endif %}

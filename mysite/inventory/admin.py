@@ -1,9 +1,5 @@
 from django.contrib import admin
-from .models import Inventory, Item
-
-class InventoryAdmin(admin.ModelAdmin):
-    pass
-admin.site.register(Inventory, InventoryAdmin)
+from .models import Item
 
 class ItemAdmin(admin.ModelAdmin):
     pass

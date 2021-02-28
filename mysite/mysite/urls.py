@@ -19,5 +19,7 @@ from inventory import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('upload/', views.image_upload_view),
+    path('addinventory/', views.add_inventory_view),
+    path('sell/', views.sell_inventory_view),
+    path('videos/', views.info_vids),
 ]
